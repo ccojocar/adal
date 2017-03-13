@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	logPrefix = "autorest/adal/devicetoken:"
+	logPrefix = "adal/devicetoken:"
 )
 
 var (
