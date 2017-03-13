@@ -30,9 +30,13 @@ func LoadToken(path string) (*Token, error) {
 // that maybe accessed by multiple processes.
 func SaveToken(path string, mode os.FileMode, token Token) error {
 	dir := filepath.Dir(path)
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("failed to create directory (%s) to store token in: %v", dir, err)
+
+	_, err := os.Stat(dir)
+	if err != nil && os.IsNotExist(err) {
+		err = os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return fmt.Errorf("failed to create directory (%s) to store token in: %v", dir, err)
+		}
 	}
 
 	newFile, err := ioutil.TempFile(dir, "token")
