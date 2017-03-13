@@ -295,13 +295,16 @@ func (spt *ServicePrincipalToken) refreshInternal(resource string) error {
 		}
 	}
 
-	body := ioutil.NopCloser(strings.NewReader(v.Encode()))
+	s := v.Encode()
+	body := ioutil.NopCloser(strings.NewReader(s))
 	req, err := http.NewRequest(http.MethodPost, spt.oauthConfig.TokenEndpoint.String(), body)
 	if err != nil {
 		return fmt.Errorf("adal: Failed to build the refresh request. Error = '%v'", err)
 	}
 
+	req.ContentLength = int64(len(s))
 	req.Header.Set(contentType, mimeTypeFormPost)
+
 	resp, err := spt.sender.Do(req)
 	if err != nil {
 		return fmt.Errorf("adal: Failed to execute the refresh request. Error = '%v'", err)
