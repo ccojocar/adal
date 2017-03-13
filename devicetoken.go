@@ -93,14 +93,16 @@ func InitiateDeviceAuth(sender Sender, oauthConfig OAuthConfig, clientID, resour
 		"resource":  []string{resource},
 	}
 
-	body := ioutil.NopCloser(strings.NewReader(v.Encode()))
-
+	s := v.Encode()
+	body := ioutil.NopCloser(strings.NewReader(s))
 	req, err := http.NewRequest(http.MethodPost, oauthConfig.DeviceCodeEndpoint.String(), body)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errCodeSendingFails, err.Error())
 	}
 
+	req.ContentLength = int64(len(s))
 	req.Header.Set(contentType, mimeTypeFormPost)
+
 	resp, err := sender.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errCodeSendingFails, err.Error())
@@ -143,13 +145,16 @@ func CheckForUserCompletion(sender Sender, code *DeviceCode) (*Token, error) {
 		"resource":   []string{code.Resource},
 	}
 
-	body := ioutil.NopCloser(strings.NewReader(v.Encode()))
-
+	s := v.Encode()
+	body := ioutil.NopCloser(strings.NewReader(s))
 	req, err := http.NewRequest(http.MethodPost, code.OAuthConfig.TokenEndpoint.String(), body)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errTokenSendingFails, err.Error())
 	}
+
+	req.ContentLength = int64(len(s))
 	req.Header.Set(contentType, mimeTypeFormPost)
+
 	resp, err := sender.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errTokenSendingFails, err.Error())
