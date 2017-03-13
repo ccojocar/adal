@@ -20,6 +20,7 @@ const (
 	deviceMode       = "device"
 	clientSecretMode = "secret"
 	clientCertMode   = "cert"
+	refreshMode      = "refresh"
 
 	activeDirectoryEndpoint = "https://login.microsoftonline.com/"
 )
@@ -60,7 +61,7 @@ func defaultTokenCachePath() string {
 }
 
 func init() {
-	flag.StringVar(&mode, "mode", "device", "authentication mode (device, secret, cert)")
+	flag.StringVar(&mode, "mode", "device", "authentication mode (device, secret, cert, refresh)")
 	flag.StringVar(&resource, "resource", "", "resource for which the token is requested")
 	flag.StringVar(&tenantID, "tenantId", "", "tenant id")
 	flag.StringVar(&applicationID, "applicationId", "", "application id")
@@ -91,8 +92,14 @@ func init() {
 			option{name: "tenantId", value: tenantID},
 			option{name: "applicationId", value: applicationID},
 		)
+	case refreshMode:
+		checkMondatoryOptions(refreshMode,
+			option{name: "resource", value: resource},
+			option{name: "tenantId", value: tenantID},
+			option{name: "applicationId", value: applicationID},
+		)
 	default:
-		log.Fatalln("Authentication modes 'secret, 'cert' or 'device' are supported.")
+		log.Fatalln("Authentication modes 'secret, 'cert', 'device' or 'refresh' are supported.")
 	}
 }
 
@@ -190,6 +197,29 @@ func acquireTokenDeviceCodeFlow(oauthConfig adal.OAuthConfig,
 	return spt, err
 }
 
+func refreshToken(oauthConfig adal.OAuthConfig,
+	applicationID string,
+	resource string,
+	tokenCachePath string,
+	callbacks ...adal.TokenRefreshCallback) (*adal.ServicePrincipalToken, error) {
+
+	token, err := adal.LoadToken(tokenCachePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load token from cache: %v", err)
+	}
+
+	spt, err := adal.NewServicePrincipalTokenFromManualToken(
+		oauthConfig,
+		applicationID,
+		resource,
+		*token,
+		callbacks...)
+	if err != nil {
+		return nil, err
+	}
+	return spt, spt.Refresh()
+}
+
 func saveToken(spt adal.Token) error {
 	if tokenCachePath != "" {
 		err := adal.SaveToken(tokenCachePath, 0600, spt)
@@ -230,10 +260,21 @@ func main() {
 			resource,
 			callback)
 	case deviceMode:
-		_, err = acquireTokenDeviceCodeFlow(
+		var spt *adal.ServicePrincipalToken
+		spt, err = acquireTokenDeviceCodeFlow(
 			*oauthConfig,
 			applicationID,
 			resource,
+			callback)
+		if err == nil {
+			err = saveToken(spt.Token)
+		}
+	case refreshMode:
+		_, err = refreshToken(
+			*oauthConfig,
+			applicationID,
+			resource,
+			tokenCachePath,
 			callback)
 	}
 
