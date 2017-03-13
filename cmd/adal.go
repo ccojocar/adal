@@ -6,8 +6,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/cosmincojocar/adal"
+	"crypto/rsa"
+	"crypto/x509"
+	"io/ioutil"
 	"os/user"
+
+	"github.com/cosmincojocar/adal"
+	"golang.org/x/crypto/pkcs12"
 )
 
 const (
@@ -94,14 +99,58 @@ func acquireTokenClientSecretFlow(oauthConfig adal.OAuthConfig,
 	appliationID string,
 	applicationSecret string,
 	resource string,
-	callbakcs ...adal.TokenRefreshCallback) (*adal.ServicePrincipalToken, error) {
+	callbacks ...adal.TokenRefreshCallback) (*adal.ServicePrincipalToken, error) {
 
 	spt, err := adal.NewServicePrincipalToken(
 		oauthConfig,
 		appliationID,
 		applicationSecret,
 		resource,
-		callbakcs...)
+		callbacks...)
+	if err != nil {
+		return nil, err
+	}
+
+	return spt, spt.Refresh()
+}
+
+func decodePkcs12(pkcs []byte, password string) (*x509.Certificate, *rsa.PrivateKey, error) {
+	privateKey, certificate, err := pkcs12.Decode(pkcs, password)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rsaPrivateKey, isRsaKey := privateKey.(*rsa.PrivateKey)
+	if !isRsaKey {
+		return nil, nil, fmt.Errorf("PKCS#12 certificate must contain an RSA private key")
+	}
+
+	return certificate, rsaPrivateKey, nil
+}
+
+func acquireTokenClientCertFlow(oauthConfig adal.OAuthConfig,
+	applicationID string,
+	applicationCertPath string,
+	resource string,
+	callbacks ...adal.TokenRefreshCallback) (*adal.ServicePrincipalToken, error) {
+
+	certData, err := ioutil.ReadFile(certificatePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read the certificate file (%s): %v", certificatePath, err)
+	}
+
+	certificate, rsaPrivateKey, err := decodePkcs12(certData, "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode pkcs12 certificate while creating spt: %v", err)
+	}
+
+	spt, err := adal.NewServicePrincipalTokenFromCertificate(
+		oauthConfig,
+		applicationID,
+		certificate,
+		rsaPrivateKey,
+		resource,
+		callbacks...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,6 +188,13 @@ func main() {
 			*oauthConfig,
 			applicationID,
 			applicationSecret,
+			resource,
+			callback)
+	case clientCertMode:
+		_, err = acquireTokenClientCertFlow(
+			*oauthConfig,
+			applicationID,
+			certificatePath,
 			resource,
 			callback)
 	}
