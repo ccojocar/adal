@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmincojocar/adal"
 	"golang.org/x/crypto/pkcs12"
+	"net/http"
 )
 
 const (
@@ -158,6 +159,37 @@ func acquireTokenClientCertFlow(oauthConfig adal.OAuthConfig,
 	return spt, spt.Refresh()
 }
 
+func acquireTokenDeviceCodeFlow(oauthConfig adal.OAuthConfig,
+	applicationID string,
+	resource string,
+	callbacks ...adal.TokenRefreshCallback) (*adal.ServicePrincipalToken, error) {
+
+	oauthClient := &http.Client{}
+	deviceCode, err := adal.InitiateDeviceAuth(
+		oauthClient,
+		oauthConfig,
+		applicationID,
+		resource)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to start device auth flow: %s", err)
+	}
+
+	fmt.Println(*deviceCode.Message)
+
+	token, err := adal.WaitForUserCompletion(oauthClient, deviceCode)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to finish device auth flow: %s", err)
+	}
+
+	spt, err := adal.NewServicePrincipalTokenFromManualToken(
+		oauthConfig,
+		applicationID,
+		resource,
+		*token,
+		callbacks...)
+	return spt, err
+}
+
 func saveToken(spt adal.Token) error {
 	if tokenCachePath != "" {
 		err := adal.SaveToken(tokenCachePath, 0600, spt)
@@ -195,6 +227,12 @@ func main() {
 			*oauthConfig,
 			applicationID,
 			certificatePath,
+			resource,
+			callback)
+	case deviceMode:
+		_, err = acquireTokenDeviceCodeFlow(
+			*oauthConfig,
+			applicationID,
 			resource,
 			callback)
 	}
