@@ -89,7 +89,7 @@ level. There is a set of [pre-defined roles](https://docs.microsoft.com/en-us/az
 which can be assigned to a service principal of an Azure AD application depending of your needs.
 
 ```
-az role assignment create --assignee "SERVICE_PRINCIPAL_ID" --role "ROLE_NAME"
+az role assignment create --assigner "SERVICE_PRINCIPAL_ID" --role "ROLE_NAME"
 ```
 
 * Replace the `SERVICE_PRINCIPAL_ID` with the `appId` from previous step.
@@ -102,3 +102,155 @@ az role definition create --role-definition role-definition.json
 ```
 
 * Check [custom roles](https://docs.microsoft.com/en-us/azure/active-directory/role-based-access-control-custom-roles) for more details regarding the content of role-definition.json file.
+
+
+### Acquire the access token 
+
+The common configuration used by all flows:
+
+```Go
+
+	const activeDirectoryEndpoint = "https://login.microsoftonline.com/"
+    tenantID := "TENANT_ID"
+	oauthConfig, err := adal.NewOAuthConfig(activeDirectoryEndpoint, tenantID)
+
+    applicationID := "APPLICATION_ID"
+
+	callback := func(token adal.Token) error {
+       // This is called after the token is acquired
+	}
+    
+    // The resource for which the token is acquired 
+    resource := "https://management.core.windows.net/"
+```
+  * Replace the `TENANT_ID` with your tenant ID.
+  * Replace the `APPLICATION_ID` with the value from previous section.
+
+#### Client credentials 
+
+```Go
+
+    applicationSecret := "APPLICATION_SECRET"
+
+	spt, err := adal.NewServicePrincipalToken(
+		oauthConfig,
+		appliationID,
+		applicationSecret,
+		resource,
+		callbacks...)
+	if err != nil {
+		return nil, err
+	}
+
+    // Acquire a new access token
+	err  = spt.Refresh()
+    if (err == nil) {
+       token := spt.Token
+    }
+```
+
+  * Replace the `APPLICATION_SECRET` with the `password` value from previous section. 
+
+### Client Certificate
+
+```Go
+    certificatePath := "./example-app.pfx"
+    
+	certData, err := ioutil.ReadFile(certificatePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read the certificate file (%s): %v", certificatePath, err)
+	}
+
+    // Get the certificate and private key from pfx file
+	certificate, rsaPrivateKey, err := decodePkcs12(certData, "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode pkcs12 certificate while creating spt: %v", err)
+	}
+
+	spt, err := adal.NewServicePrincipalTokenFromCertificate(
+		oauthConfig,
+		applicationID,
+		certificate,
+		rsaPrivateKey,
+		resource,
+		callbacks...)
+    
+    // Acquire a new access token
+	err  = spt.Refresh()
+    if (err == nil) {
+       token := spt.Token
+    }
+```
+
+  * Update the certificate path to point to the example-app.pfx file which was created in previous section.
+
+
+### Device Code 
+
+```Go
+	oauthClient := &http.Client{}
+    
+    // Acquire the device code 
+	deviceCode, err := adal.InitiateDeviceAuth(
+		oauthClient,
+		oauthConfig,
+		applicationID,
+		resource)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to start device auth flow: %s", err)
+	}
+
+    // Display the authentication message
+	fmt.Println(*deviceCode.Message)
+
+    // Wait here until the user is authenticated
+	token, err := adal.WaitForUserCompletion(oauthClient, deviceCode)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to finish device auth flow: %s", err)
+	}
+
+	spt, err := adal.NewServicePrincipalTokenFromManualToken(
+		oauthConfig,
+		applicationID,
+		resource,
+		*token,
+		callbacks...)
+    
+    if (err == nil) {
+       token := spt.Token
+    }
+```
+
+### Command line tool 
+
+A command line tool is available in `cmd/adal.go` that can acquire a token for a given resources. It supports all flows mentioned above.
+
+```
+adal -h
+
+Usage of ./adal:
+  -applicationId string
+        application id
+  -certificatePath string
+        path to pk12/PFC application certificate
+  -mode string
+        authentication mode (device, secret, cert, refresh) (default "device")
+  -resource string
+        resource for which the token is requested
+  -secret string
+        application secret
+  -tenantId string
+        tenant id
+  -tokenCachePath string
+        location of oath token cache (default "/home/cgc/.adal/accessToken.json")
+```
+
+Example acquire a token for `https://management.core.windows.net/'` using device code flow:
+
+```
+adal -mode device \
+    -applicationId "APPLICATION_ID" \
+    -tenantId "TENANT_ID"\
+    -resource https://management.core.windows.net/ 
+
+```
