@@ -104,7 +104,7 @@ az role definition create --role-definition role-definition.json
 * Check [custom roles](https://docs.microsoft.com/en-us/azure/active-directory/role-based-access-control-custom-roles) for more details regarding the content of role-definition.json file.
 
 
-### Acquire the access token 
+### Acquire the access token
 
 The common configuration used by all flows:
 
@@ -119,14 +119,14 @@ The common configuration used by all flows:
 	callback := func(token adal.Token) error {
        // This is called after the token is acquired
 	}
-    
-    // The resource for which the token is acquired 
+
+    // The resource for which the token is acquired
     resource := "https://management.core.windows.net/"
 ```
   * Replace the `TENANT_ID` with your tenant ID.
   * Replace the `APPLICATION_ID` with the value from previous section.
 
-#### Client credentials 
+#### Client credentials
 
 ```Go
 
@@ -149,13 +149,13 @@ The common configuration used by all flows:
     }
 ```
 
-  * Replace the `APPLICATION_SECRET` with the `password` value from previous section. 
+  * Replace the `APPLICATION_SECRET` with the `password` value from previous section.
 
 ### Client Certificate
 
 ```Go
     certificatePath := "./example-app.pfx"
-    
+
 	certData, err := ioutil.ReadFile(certificatePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the certificate file (%s): %v", certificatePath, err)
@@ -174,7 +174,7 @@ The common configuration used by all flows:
 		rsaPrivateKey,
 		resource,
 		callbacks...)
-    
+
     // Acquire a new access token
 	err  = spt.Refresh()
     if (err == nil) {
@@ -185,12 +185,12 @@ The common configuration used by all flows:
   * Update the certificate path to point to the example-app.pfx file which was created in previous section.
 
 
-### Device Code 
+### Device Code
 
 ```Go
 	oauthClient := &http.Client{}
-    
-    // Acquire the device code 
+
+    // Acquire the device code
 	deviceCode, err := adal.InitiateDeviceAuth(
 		oauthClient,
 		oauthConfig,
@@ -215,13 +215,13 @@ The common configuration used by all flows:
 		resource,
 		*token,
 		callbacks...)
-    
+
     if (err == nil) {
        token := spt.Token
     }
 ```
 
-### Command line tool 
+### Command line tool
 
 A command line tool is available in `cmd/adal.go` that can acquire a token for a given resources. It supports all flows mentioned above.
 
@@ -251,6 +251,6 @@ Example acquire a token for `https://management.core.windows.net/'` using device
 adal -mode device \
     -applicationId "APPLICATION_ID" \
     -tenantId "TENANT_ID"\
-    -resource https://management.core.windows.net/ 
+    -resource https://management.core.windows.net/
 
 ```
