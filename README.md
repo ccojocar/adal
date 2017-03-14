@@ -71,7 +71,7 @@ An Active Directory application is required in order to use this library. An app
       --identifier-uris https://example-app/app \
       --key-usage Verify --end-date 2018-01-01 \
       --key-value "${certificateContents}"
-  ```
+   ```
 
 5. Create a service principal using the `Application ID` from previous step
 
@@ -104,7 +104,7 @@ az role definition create --role-definition role-definition.json
 * Check [custom roles](https://docs.microsoft.com/en-us/azure/active-directory/role-based-access-control-custom-roles) for more details regarding the content of role-definition.json file.
 
 
-### Acquire the access token
+### Acquire Access Token
 
 The common configuration used by all flows:
 
@@ -126,7 +126,7 @@ The common configuration used by all flows:
   * Replace the `TENANT_ID` with your tenant ID.
   * Replace the `APPLICATION_ID` with the value from previous section.
 
-#### Client credentials
+#### Client Credentials
 
 ```Go
 
@@ -151,7 +151,7 @@ The common configuration used by all flows:
 
   * Replace the `APPLICATION_SECRET` with the `password` value from previous section.
 
-### Client Certificate
+#### Client Certificate
 
 ```Go
     certificatePath := "./example-app.pfx"
@@ -185,7 +185,7 @@ The common configuration used by all flows:
   * Update the certificate path to point to the example-app.pfx file which was created in previous section.
 
 
-### Device Code
+#### Device Code
 
 ```Go
 	oauthClient := &http.Client{}
@@ -221,7 +221,7 @@ The common configuration used by all flows:
     }
 ```
 
-### Command line tool
+### Command Line Tool
 
 A command line tool is available in `cmd/adal.go` that can acquire a token for a given resources. It supports all flows mentioned above.
 
