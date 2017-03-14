@@ -4,7 +4,7 @@ This project provides a stand alone Azure Active Directory library for Go. The c
 from [go-autorest](https://github.com/Azure/go-autorest/) project, which is used as a base for
 [azure-sdk-for-go](https://github.com/Azure/azure-sdk-for-go).
 
-[![Build Status](https://travis-ci.org/cosmincojocar/adal.svg?branch=master)](https://travis-ci.org/cosmincojocar/adal) [![Go Report Card](https://goreportcard.com/badge/github.com/cosmincojocar/adal)](https://goreportcard.com/report/github.com/cosmincojocar/adal)oauth2
+[![Build Status](https://travis-ci.org/cosmincojocar/adal.svg?branch=master)](https://travis-ci.org/cosmincojocar/adal) [![Go Report Card](https://goreportcard.com/badge/github.com/cosmincojocar/adal)](https://goreportcard.com/report/github.com/cosmincojocar/adal)
 
 
 ## Installation
@@ -15,7 +15,7 @@ go get -u github.com/cosmincojocar/adal
 
 ## Usage
 
-An Active Directory application is required in order to use this library. An application can be registered in the [Azure Portal](https://portal.azure.com/) follow this [guidelines](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-integrating-applications) or using the [Azure CLI](https://github.com/Azure/azure-cli).
+An Active Directory application is required in order to use this library. An application can be registered in the [Azure Portal](https://portal.azure.com/) follow these [guidelines](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-integrating-applications) or using the [Azure CLI](https://github.com/Azure/azure-cli).
 
 ### Register an Azure AD Application with secret
 
@@ -101,7 +101,7 @@ It is also possible to define custom role definitions.
 az role definition create --role-definition role-definition.json
 ```
 
-* Check [custom roles](https://docs.microsoft.com/en-us/azure/active-directory/role-based-access-control-custom-roles) for more details regarding the content of role-definition.json file.
+* Check [custom roles](https://docs.microsoft.com/en-us/azure/active-directory/role-based-access-control-custom-roles) for more details regarding the content of `role-definition.json` file.
 
 
 ### Acquire Access Token
@@ -109,121 +109,120 @@ az role definition create --role-definition role-definition.json
 The common configuration used by all flows:
 
 ```Go
+const activeDirectoryEndpoint = "https://login.microsoftonline.com/"
+tenantID := "TENANT_ID"
+oauthConfig, err := adal.NewOAuthConfig(activeDirectoryEndpoint, tenantID)
 
-	const activeDirectoryEndpoint = "https://login.microsoftonline.com/"
-    tenantID := "TENANT_ID"
-	oauthConfig, err := adal.NewOAuthConfig(activeDirectoryEndpoint, tenantID)
+applicationID := "APPLICATION_ID"
 
-    applicationID := "APPLICATION_ID"
+callback := func(token adal.Token) error {
+    // This is called after the token is acquired
+}
 
-	callback := func(token adal.Token) error {
-       // This is called after the token is acquired
-	}
-
-    // The resource for which the token is acquired
-    resource := "https://management.core.windows.net/"
+// The resource for which the token is acquired
+resource := "https://management.core.windows.net/"
 ```
-  * Replace the `TENANT_ID` with your tenant ID.
-  * Replace the `APPLICATION_ID` with the value from previous section.
+
+* Replace the `TENANT_ID` with your tenant ID.
+* Replace the `APPLICATION_ID` with the value from previous section.
 
 #### Client Credentials
 
 ```Go
+applicationSecret := "APPLICATION_SECRET"
 
-    applicationSecret := "APPLICATION_SECRET"
+spt, err := adal.NewServicePrincipalToken(
+	oauthConfig,
+	appliationID,
+	applicationSecret,
+	resource,
+	callbacks...)
+if err != nil {
+	return nil, err
+}
 
-	spt, err := adal.NewServicePrincipalToken(
-		oauthConfig,
-		appliationID,
-		applicationSecret,
-		resource,
-		callbacks...)
-	if err != nil {
-		return nil, err
-	}
-
-    // Acquire a new access token
-	err  = spt.Refresh()
-    if (err == nil) {
-       token := spt.Token
-    }
+// Acquire a new access token
+err  = spt.Refresh()
+if (err == nil) {
+    token := spt.Token
+}
 ```
 
-  * Replace the `APPLICATION_SECRET` with the `password` value from previous section.
+* Replace the `APPLICATION_SECRET` with the `password` value from previous section.
 
 #### Client Certificate
 
 ```Go
-    certificatePath := "./example-app.pfx"
+certificatePath := "./example-app.pfx"
 
-	certData, err := ioutil.ReadFile(certificatePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read the certificate file (%s): %v", certificatePath, err)
-	}
+certData, err := ioutil.ReadFile(certificatePath)
+if err != nil {
+	return nil, fmt.Errorf("failed to read the certificate file (%s): %v", certificatePath, err)
+}
 
-    // Get the certificate and private key from pfx file
-	certificate, rsaPrivateKey, err := decodePkcs12(certData, "")
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode pkcs12 certificate while creating spt: %v", err)
-	}
+// Get the certificate and private key from pfx file
+certificate, rsaPrivateKey, err := decodePkcs12(certData, "")
+if err != nil {
+	return nil, fmt.Errorf("failed to decode pkcs12 certificate while creating spt: %v", err)
+}
 
-	spt, err := adal.NewServicePrincipalTokenFromCertificate(
-		oauthConfig,
-		applicationID,
-		certificate,
-		rsaPrivateKey,
-		resource,
-		callbacks...)
+spt, err := adal.NewServicePrincipalTokenFromCertificate(
+	oauthConfig,
+	applicationID,
+	certificate,
+	rsaPrivateKey,
+	resource,
+	callbacks...)
 
-    // Acquire a new access token
-	err  = spt.Refresh()
-    if (err == nil) {
-       token := spt.Token
-    }
+// Acquire a new access token
+err  = spt.Refresh()
+if (err == nil) {
+    token := spt.Token
+}
 ```
 
-  * Update the certificate path to point to the example-app.pfx file which was created in previous section.
+* Update the certificate path to point to the example-app.pfx file which was created in previous section.
 
 
 #### Device Code
 
 ```Go
-	oauthClient := &http.Client{}
+oauthClient := &http.Client{}
 
-    // Acquire the device code
-	deviceCode, err := adal.InitiateDeviceAuth(
-		oauthClient,
-		oauthConfig,
-		applicationID,
-		resource)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to start device auth flow: %s", err)
-	}
+// Acquire the device code
+deviceCode, err := adal.InitiateDeviceAuth(
+	oauthClient,
+	oauthConfig,
+	applicationID,
+	resource)
+if err != nil {
+	return nil, fmt.Errorf("Failed to start device auth flow: %s", err)
+}
 
-    // Display the authentication message
-	fmt.Println(*deviceCode.Message)
+// Display the authentication message
+fmt.Println(*deviceCode.Message)
 
-    // Wait here until the user is authenticated
-	token, err := adal.WaitForUserCompletion(oauthClient, deviceCode)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to finish device auth flow: %s", err)
-	}
+// Wait here until the user is authenticated
+token, err := adal.WaitForUserCompletion(oauthClient, deviceCode)
+if err != nil {
+	return nil, fmt.Errorf("Failed to finish device auth flow: %s", err)
+}
 
-	spt, err := adal.NewServicePrincipalTokenFromManualToken(
-		oauthConfig,
-		applicationID,
-		resource,
-		*token,
-		callbacks...)
+spt, err := adal.NewServicePrincipalTokenFromManualToken(
+	oauthConfig,
+	applicationID,
+	resource,
+	*token,
+	callbacks...)
 
-    if (err == nil) {
-       token := spt.Token
-    }
+if (err == nil) {
+    token := spt.Token
+}
 ```
 
 ### Command Line Tool
 
-A command line tool is available in `cmd/adal.go` that can acquire a token for a given resources. It supports all flows mentioned above.
+A command line tool is available in `cmd/adal.go` that can acquire a token for a given resource. It supports all flows mentioned above.
 
 ```
 adal -h
@@ -245,12 +244,12 @@ Usage of ./adal:
         location of oath token cache (default "/home/cgc/.adal/accessToken.json")
 ```
 
-Example acquire a token for `https://management.core.windows.net/'` using device code flow:
+Example acquire a token for `https://management.core.windows.net/` using device code flow:
 
 ```
 adal -mode device \
     -applicationId "APPLICATION_ID" \
-    -tenantId "TENANT_ID"\
+    -tenantId "TENANT_ID" \
     -resource https://management.core.windows.net/
 
 ```
