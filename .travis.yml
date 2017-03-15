@@ -15,6 +15,6 @@ script:
   - test -z "$(gofmt -s -l -w $(find . -type f -name '*.go' -not -path './vendor/*') | tee /dev/stderr)"
   - test -z "$(golint . |  tee /dev/stderr)"
   - go vet .
-  - gas ./..
   - go build -v .
   - go test -v .
+  - gas ./...
