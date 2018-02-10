@@ -1,6 +1,6 @@
 # Azure Active Directory library for Go
 
-This project provides a stand alone Azure Active Directory library for Go. The package is used by
+This project provides a stand alone Azure Active Directory library for Go. This package is used also by the
 [go-autorest](https://github.com/Azure/go-autorest/) project, which is the core
 library of [azure-sdk-for-go](https://github.com/Azure/azure-sdk-for-go).
 
@@ -15,7 +15,7 @@ go get -u github.com/cosmincojocar/adal
 
 ## Usage
 
-An Active Directory application is required in order to use this library. An application can be registered in the [Azure Portal](https://portal.azure.com/) follow these [guidelines](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-integrating-applications) or using the [Azure CLI](https://github.com/Azure/azure-cli).
+An Active Directory application is required in order to use this library. This application can be registered in the [Azure Portal](https://portal.azure.com/) following these [guidelines](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-integrating-applications) or using the [Azure CLI](https://github.com/Azure/azure-cli).
 
 ### Register an Azure AD Application with secret
 
