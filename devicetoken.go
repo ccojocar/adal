@@ -1,14 +1,5 @@
 package adal
 
-/*
-  This file is largely based on rjw57/oauth2device's code, with the follow differences:
-   * scope -> resource, and only allow a single one
-   * receive "Message" in the DeviceCode struct and show it to users as the prompt
-   * azure-xplat-cli has the following behavior that this emulates:
-     - does not send client_secret during the token exchange
-     - sends resource again in the token exchange request
-*/
-
 import (
 	"encoding/json"
 	"fmt"
@@ -20,7 +11,7 @@ import (
 )
 
 const (
-	logPrefix = "adal/devicetoken:"
+	logPrefix = "autorest/adal/devicetoken:"
 )
 
 var (
@@ -95,6 +86,7 @@ func InitiateDeviceAuth(sender Sender, oauthConfig OAuthConfig, clientID, resour
 
 	s := v.Encode()
 	body := ioutil.NopCloser(strings.NewReader(s))
+
 	req, err := http.NewRequest(http.MethodPost, oauthConfig.DeviceCodeEndpoint.String(), body)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errCodeSendingFails, err.Error())
@@ -102,20 +94,19 @@ func InitiateDeviceAuth(sender Sender, oauthConfig OAuthConfig, clientID, resour
 
 	req.ContentLength = int64(len(s))
 	req.Header.Set(contentType, mimeTypeFormPost)
-
 	resp, err := sender.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errCodeSendingFails, err.Error())
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%s %s: %s", logPrefix, errCodeHandlingFails, errStatusNotOK)
-	}
-
 	rb, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errCodeHandlingFails, err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%s %s: %s", logPrefix, errCodeHandlingFails, errStatusNotOK)
 	}
 
 	if len(strings.Trim(string(rb), " ")) == 0 {
@@ -147,6 +138,7 @@ func CheckForUserCompletion(sender Sender, code *DeviceCode) (*Token, error) {
 
 	s := v.Encode()
 	body := ioutil.NopCloser(strings.NewReader(s))
+
 	req, err := http.NewRequest(http.MethodPost, code.OAuthConfig.TokenEndpoint.String(), body)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errTokenSendingFails, err.Error())
@@ -154,7 +146,6 @@ func CheckForUserCompletion(sender Sender, code *DeviceCode) (*Token, error) {
 
 	req.ContentLength = int64(len(s))
 	req.Header.Set(contentType, mimeTypeFormPost)
-
 	resp, err := sender.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%s %s: %s", logPrefix, errTokenSendingFails, err.Error())
