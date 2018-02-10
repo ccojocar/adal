@@ -1,10 +1,17 @@
-hash: 1e785d1205d46f3c6eaad80ace3776af4449af70e14c7e424a4f520a32c35a58
-updated: 2017-03-09T09:25:10.182720232+01:00
+hash: addc471b01d2f949579729d6ee07299efbb662e6c38dc555703b162550f14e3c
+updated: 2018-02-10T08:45:48.93112+01:00
 imports:
-- name: github.com/dgrijalva/jwt-go
-  version: 2268707a8f0843315e2004ee4f1d021dc08baedf
-testImports:
 - name: github.com/Azure/go-autorest
-  version: ec5f4903f77ed9927ac95b19ab8e44ada64c1356
+  version: 5a06e9ddbe3c22262059b8e061777b9934f982bd
   subpackages:
+  - autorest/adal
+  - autorest/date
   - autorest/mocks
+- name: github.com/dgrijalva/jwt-go
+  version: dbeaa9332f19a944acb5736b4456cfcc02140e29
+- name: golang.org/x/crypto
+  version: d172538b2cfce0c13cee31e647d0367aa8cd2486
+  subpackages:
+  - pkcs12
+  - pkcs12/internal/rc2
+testImports: []

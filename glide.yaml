@@ -1,9 +1,12 @@
 package: github.com/cosmincojocar/adal
 import:
-- package: github.com/dgrijalva/jwt-go
-  version: v3.0.0
-testImport:
 - package: github.com/Azure/go-autorest
-  version: v7.3.0
+  version: ^10.1.0
   subpackages:
-  - autorest/mocks
+  - autorest/adal
+  - autorest/date
+- package: github.com/dgrijalva/jwt-go
+  version: ^3.1.0
+- package: golang.org/x/crypto
+  subpackages:
+  - pkcs12
