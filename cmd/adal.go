@@ -62,7 +62,7 @@ func defaultTokenCachePath() string {
 }
 
 func init() {
-	flag.StringVar(&mode, "mode", "device", "authentication mode (device, secret, cert, refresh)")
+	flag.StringVar(&mode, "mode", "device", "authentication mode (device, secret, cert, refresh, msi)")
 	flag.StringVar(&resource, "resource", "", "resource for which the token is requested")
 	flag.StringVar(&tenantID, "tenantId", "", "tenant id")
 	flag.StringVar(&applicationID, "applicationId", "", "application id")
