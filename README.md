@@ -131,6 +131,7 @@ resource := "https://management.core.windows.net/"
 ```Go
 applicationSecret := "APPLICATION_SECRET"
 
+// Set up the configuration of the service principal
 spt, err := adal.NewServicePrincipalToken(
 	oauthConfig,
 	appliationID,
@@ -141,9 +142,9 @@ if err != nil {
 	return nil, err
 }
 
-// Acquire a new access token
+// Evectively acqurie the token
 err  = spt.Refresh()
-if (err == nil) {
+if err == nil {
     token := spt.Token
 }
 ```
@@ -166,6 +167,7 @@ if err != nil {
 	return nil, fmt.Errorf("failed to decode pkcs12 certificate while creating spt: %v", err)
 }
 
+// Set up the configuration of the service principal
 spt, err := adal.NewServicePrincipalTokenFromCertificate(
 	oauthConfig,
 	applicationID,
@@ -174,9 +176,9 @@ spt, err := adal.NewServicePrincipalTokenFromCertificate(
 	resource,
 	callbacks...)
 
-// Acquire a new access token
+// Evectively acqurie the token
 err  = spt.Refresh()
-if (err == nil) {
+if err == nil {
     token := spt.Token
 }
 ```
@@ -215,9 +217,63 @@ spt, err := adal.NewServicePrincipalTokenFromManualToken(
 	*token,
 	callbacks...)
 
-if (err == nil) {
+if err == nil {
     token := spt.Token
 }
+```
+
+### Managed Service Identity
+
+You can retrieve a token with this flow on a VM which support [MSI](https://docs.microsoft.com/en-us/azure/active-directory/msi-overview) extension.
+
+#### Client Token
+
+```Go
+// Get the MSI endpoint accoriding with the OS (Linux/Windows)
+msiEndpoint, err := adal.GetMSIVMEndpoint()
+if err != nil {
+    return nil, fmt.Errorf("Failed to get the MSI endpoint. Error: %v", err)
+}
+
+// Set up the configuration of the service principal
+spt, err := adal.NewServicePrincipalTokenFromMSI(msiEndpoint, resource, callbacks...)
+if err != nil {
+    return nil, fmt.Errorf("Failed to acquire a token using the MSI VM extension. Error: %v", err)
+}
+
+// Evectively acqurie the token
+err = spt.Refresh()
+if err == nil {
+    token := spt.Token
+}
+```
+
+#### User Token
+
+It is possible to request a token with user context using MSI. You just have to provide the user ID.
+
+```Go
+// Get the MSI endpoint accoriding with the OS (Linux/Windows)
+msiEndpoint, err := adal.GetMSIVMEndpoint()
+if err != nil {
+    return nil, fmt.Errorf("Failed to get the MSI endpoint. Error: %v", err)
+}
+
+// The ID of the user for whom the token is requested
+userAssignedID := <USER ID>
+
+// Set up the configuration of the service principal
+spt, err := adal.NewServicePrincipalTokenFromMSIWithUserAssignedID((msiEndpoint, resource, userAssignedID, callbacks...)
+if err != nil {
+    return nil, fmt.Errorf("Failed to acquire a token using the MSI VM extension. Error: %v", err)
+}
+
+// Evectively acqurie the token
+err = spt.Refresh()
+if err == nil {
+    token := spt.Token
+}
+
 ```
 
 ### Command Line Tool
@@ -233,7 +289,7 @@ Usage of ./adal:
   -certificatePath string
         path to pk12/PFC application certificate
   -mode string
-        authentication mode (device, secret, cert, refresh) (default "device")
+        authentication mode (device, secret, cert, refresh, "msi") (default "device")
   -resource string
         resource for which the token is requested
   -secret string
