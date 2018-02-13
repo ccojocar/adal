@@ -21,6 +21,7 @@ const (
 	clientSecretMode = "secret"
 	clientCertMode   = "cert"
 	refreshMode      = "refresh"
+	msiMode          = "msi"
 
 	activeDirectoryEndpoint = "https://login.microsoftonline.com/"
 )
@@ -97,6 +98,10 @@ func init() {
 			option{name: "resource", value: resource},
 			option{name: "tenantId", value: tenantID},
 			option{name: "applicationId", value: applicationID},
+		)
+	case msiMode:
+		checkMandatoryOptions(msiMode,
+			option{name: "resource", value: resource},
 		)
 	default:
 		log.Fatalln("Authentication modes 'secret, 'cert', 'device' or 'refresh' are supported.")
@@ -197,6 +202,21 @@ func acquireTokenDeviceCodeFlow(oauthConfig adal.OAuthConfig,
 	return spt, err
 }
 
+func acquireTokenMSIFlow(resource string,
+	callbacks ...adal.TokenRefreshCallback) (*adal.ServicePrincipalToken, error) {
+
+	msiEndpoint, err := adal.GetMSIVMEndpoint()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get the MSI endpoint. Error: %v", err)
+	}
+	spt, err := adal.NewServicePrincipalTokenFromMSI(msiEndpoint, resource, callbacks...)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to acquire a token using the MSI VM extension. Error: %v", err)
+	}
+
+	return spt, spt.Refresh()
+}
+
 func refreshToken(oauthConfig adal.OAuthConfig,
 	applicationID string,
 	resource string,
@@ -276,6 +296,8 @@ func main() {
 			resource,
 			tokenCachePath,
 			callback)
+	case msiMode:
+		_, err = acquireTokenMSIFlow(resource, callback)
 	}
 
 	if err != nil {
