@@ -4,13 +4,13 @@ This project provides a stand alone Azure Active Directory library for Go, that 
 [go-autorest](https://github.com/Azure/go-autorest/) project, which is the core
 of [azure-sdk-for-go](https://github.com/Azure/azure-sdk-for-go) library.
 
-[![Build Status](https://travis-ci.org/cosmincojocar/adal.svg?branch=master)](https://travis-ci.org/cosmincojocar/adal) [![Go Report Card](https://goreportcard.com/badge/github.com/cosmincojocar/adal)](https://goreportcard.com/report/github.com/cosmincojocar/adal)
+[![Build Status](https://travis-ci.org/ccojocar/adal.svg?branch=master)](https://travis-ci.org/ccojocar/adal) [![Go Report Card](https://goreportcard.com/badge/github.com/ccojocar/adal)](https://goreportcard.com/report/github.com/ccojocar/adal)
 
 
 ## Installation
 
 ```
-go get -u github.com/cosmincojocar/adal
+go get -u github.com/ccojocar/adal
 ```
 
 ## Usage

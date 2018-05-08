@@ -1,4 +1,4 @@
-package: github.com/cosmincojocar/adal
+package: github.com/ccojocar/adal
 import:
 - package: github.com/Azure/go-autorest
   version: ^10.1.0
