@@ -10,7 +10,7 @@ import (
 
 // LoadToken restores a Token object from a file located at 'path'.
 func LoadToken(path string) (*Token, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(path) // #nosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file (%s) while loading token: %v", path, err)
 	}

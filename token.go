@@ -432,7 +432,7 @@ func GetMSIVMEndpoint() (string, error) {
 
 func getMSIVMEndpoint(path string) (string, error) {
 	// Read MSI settings
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(path) // #nosec
 	if err != nil {
 		return "", err
 	}

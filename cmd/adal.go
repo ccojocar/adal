@@ -147,7 +147,7 @@ func acquireTokenClientCertFlow(oauthConfig adal.OAuthConfig,
 	resource string,
 	callbacks ...adal.TokenRefreshCallback) (*adal.ServicePrincipalToken, error) {
 
-	certData, err := ioutil.ReadFile(certificatePath)
+	certData, err := ioutil.ReadFile(certificatePath) // #nosec
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the certificate file (%s): %v", certificatePath, err)
 	}
