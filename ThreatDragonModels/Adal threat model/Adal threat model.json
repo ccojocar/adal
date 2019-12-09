@@ -5,7 +5,47 @@
   },
   "detail": {
     "contributors": [],
-    "diagrams": [],
+    "diagrams": [
+      {
+        "title": "test",
+        "thumbnail": "./public/content/images/thumbnail.jpg",
+        "id": 0,
+        "diagramJson": {
+          "cells": [
+            {
+              "type": "tm.Actor",
+              "size": {
+                "width": 160,
+                "height": 80
+              },
+              "position": {
+                "x": 112,
+                "y": 119
+              },
+              "angle": 0,
+              "id": "b8ce5c83-8e6f-4dfb-914e-8a27e3b90486",
+              "z": 1,
+              "hasOpenThreats": false,
+              "attrs": {
+                ".element-shape": {
+                  "class": "element-shape hasNoOpenThreats isInScope"
+                },
+                "text": {
+                  "text": "user"
+                },
+                ".element-text": {
+                  "class": "element-text hasNoOpenThreats isInScope"
+                }
+              }
+            }
+          ]
+        },
+        "size": {
+          "height": 590,
+          "width": 790
+        }
+      }
+    ],
     "reviewer": "George Cosmin"
   }
 }
